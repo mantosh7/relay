@@ -1,6 +1,8 @@
 package com.relay.relay.config;
 
 import org.springframework.amqp.core.*;
+import org.springframework.amqp.support.converter.JacksonJsonMessageConverter;
+import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -24,5 +26,10 @@ public class RabbitMQConfig {
     @Bean
     public Binding binding(Queue jobQueue, DirectExchange jobExchange) {
         return BindingBuilder.bind(jobQueue).to(jobExchange).with(JOB_ROUTING_KEY);
+    }
+
+    @Bean
+    public MessageConverter jsonMessageConverter() {
+        return new JacksonJsonMessageConverter();
     }
 }
