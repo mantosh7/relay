@@ -45,6 +45,5 @@ public class JobConsumerService {
     private void processJob(JobMessageDTO message) throws InterruptedException {
         System.out.println("Processing job type: " + message.getJobType());
         System.out.println("Payload: " + message.getPayload());
-        Thread.sleep(2000); // 2 second ka fake processing time
-    }
+        Thread.sleep(2000);
 }
