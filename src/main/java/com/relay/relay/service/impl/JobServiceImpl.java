@@ -1,5 +1,6 @@
 package com.relay.relay.service.impl;
 
+import com.relay.relay.dto.JobMessageDTO;
 import com.relay.relay.dto.JobRequestDTO;
 import com.relay.relay.dto.JobResponseDTO;
 import com.relay.relay.entity.Client;
@@ -9,22 +10,25 @@ import com.relay.relay.exception.ClientNotFoundException;
 import com.relay.relay.exception.JobNotFoundException;
 import com.relay.relay.repository.ClientRepository;
 import com.relay.relay.repository.JobRepository;
+import com.relay.relay.service.JobPublisherService;
 import com.relay.relay.service.JobService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class JobServiceImpl implements JobService {
 
     private final JobRepository jobRepository;
     private final ClientRepository clientRepository;
+    private final JobPublisherService jobPublisherService;
 
-    public JobServiceImpl(JobRepository jobRepository, ClientRepository clientRepository) {
+    public JobServiceImpl(JobRepository jobRepository, ClientRepository clientRepository,
+                          JobPublisherService jobPublisherService) {
         this.jobRepository = jobRepository;
         this.clientRepository = clientRepository;
+        this.jobPublisherService = jobPublisherService;
     }
 
     @Override
@@ -42,6 +46,15 @@ public class JobServiceImpl implements JobService {
         job.setClient(client);
 
         Job savedJob = jobRepository.save(job);
+
+        JobMessageDTO message = new JobMessageDTO(
+                savedJob.getId(),
+                savedJob.getJobType(),
+                savedJob.getPayload(),
+                savedJob.getPriority()
+        );
+        jobPublisherService.publishJob(message);
+
         return mapToResponseDTO(savedJob);
     }
 
