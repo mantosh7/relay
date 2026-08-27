@@ -14,31 +14,46 @@ public class JobConsumerService {
 
     private final JobRepository jobRepository;
     private final RabbitTemplate rabbitTemplate;
+    private final DistributedLockService distributedLockService;
 
-    public JobConsumerService(JobRepository jobRepository, RabbitTemplate rabbitTemplate) {
+    public JobConsumerService(JobRepository jobRepository, RabbitTemplate rabbitTemplate,
+                              DistributedLockService distributedLockService) {
         this.jobRepository = jobRepository;
         this.rabbitTemplate = rabbitTemplate;
+        this.distributedLockService = distributedLockService;
     }
 
     @RabbitListener(queues = RabbitMQConfig.JOB_QUEUE)
     public void consumeJob(JobMessageDTO message) {
-        System.out.println("Received job: " + message.getJobId());
+        String jobId = message.getJobId().toString();
 
-        Job job = jobRepository.findById(message.getJobId())
-                .orElseThrow(() -> new RuntimeException("Job not found: " + message.getJobId()));
-
-        job.setStatus(JobStatus.PROCESSING);
-        jobRepository.save(job);
+        boolean lockAcquired = distributedLockService.acquireLock(jobId);
+        if(!lockAcquired){
+            System.out.println("Job already being processed elsewhere, akipping: " + jobId);
+            return ;
+        }
 
         try {
-            processJob(message);
+            System.out.println("Received job: " + message.getJobId());
 
-            job.setStatus(JobStatus.SUCCESS);
+            Job job = jobRepository.findById(message.getJobId())
+                    .orElseThrow(() -> new RuntimeException("Job not found: " + message.getJobId()));
+
+            job.setStatus(JobStatus.PROCESSING);
             jobRepository.save(job);
-            System.out.println("Job completed successfully: " + message.getJobId());
 
-        } catch (Exception e) {
-            handleFailure(job, message, e);
+            try {
+                processJob(message);
+
+                job.setStatus(JobStatus.SUCCESS);
+                jobRepository.save(job);
+                System.out.println("Job completed successfully: " + message.getJobId());
+
+            } catch (Exception e) {
+                handleFailure(job, message, e);
+            }
+        } finally {
+            distributedLockService.releaseLock(jobId);
         }
     }
 
