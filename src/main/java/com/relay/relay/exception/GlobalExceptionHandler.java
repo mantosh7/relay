@@ -29,6 +29,20 @@ public class GlobalExceptionHandler {
                 .body(error);
     }
 
+    @ExceptionHandler(RateLimitExceededException.class)
+    public ResponseEntity<Map<String, Object>> handleRateLimitExceeded(RateLimitExceededException ex) {
+        Map<String, Object> error = new HashMap<>();
+
+        error.put("timestamp", LocalDateTime.now());
+        error.put("status", HttpStatus.TOO_MANY_REQUESTS.value());
+        error.put("error", "RATE_LIMIT_EXCEEDED");
+        error.put("message", ex.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.TOO_MANY_REQUESTS)
+                .body(error);
+    }
+
     @ExceptionHandler(ClientNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleClientNotFound(ClientNotFoundException ex) {
         Map<String, Object> error = new HashMap<>();
