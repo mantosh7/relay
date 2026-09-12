@@ -1,7 +1,7 @@
 package com.relay.relay.exception;
 
-public class RateLimitExceededException implements RuntimeException{
-    public RateLimitExceededException(String message){
+public class RateLimitExceededException extends RuntimeException {
+    public RateLimitExceededException(String message) {
         super(message);
     }
 }

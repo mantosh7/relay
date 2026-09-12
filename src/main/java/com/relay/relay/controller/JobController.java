@@ -2,9 +2,11 @@ package com.relay.relay.controller;
 
 import com.relay.relay.dto.JobRequestDTO;
 import com.relay.relay.dto.JobResponseDTO;
+import com.relay.relay.exception.RateLimitExceededException;
 import com.relay.relay.service.JobService;
 import com.relay.relay.service.RateLimiterService;
 import jakarta.validation.Valid;
+import org.jspecify.annotations.NonNull;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,9 +26,9 @@ public class JobController {
     }
 
     @PostMapping
-    public ResponseEntity<JobResponseDTO> createJob(@Valid @RequestBody JobRequestDTO request) {
+    public ResponseEntity<JobResponseDTO> createJob(@Valid @RequestBody @NonNull JobRequestDTO request) {
         if (!rateLimiterService.isAllowed(request.getClientId().toString())) {
-            throw new RateLimitExceededException("Rate limit exceeded for client: " + request.getClientId());
+            throw new   RateLimitExceededException("Rate limit exceeded for client: " + request.getClientId());
         }
 
         return ResponseEntity.ok(jobService.createJob(request));

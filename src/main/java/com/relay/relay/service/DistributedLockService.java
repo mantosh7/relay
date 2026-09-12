@@ -2,9 +2,11 @@ package com.relay.relay.service;
 
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 
+@Service
 public class DistributedLockService {
     private final RedisTemplate<String, String> redisTemplate;
     private static final String LOCK_PREFIX = "job.lock:";
