@@ -18,5 +18,6 @@ public class JobResponseDTO {
     private JobStatus status;
     private Priority priority;
     private int retryCount;
+    private String errorMessage;
     private LocalDateTime createdAt;
 }

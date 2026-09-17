@@ -93,6 +93,7 @@ public class JobServiceImpl implements JobService {
                 job.getStatus(),
                 job.getPriority(),
                 job.getRetryCount(),
+                job.getErrorMessage(),
                 job.getCreatedAt()
         );
     }
