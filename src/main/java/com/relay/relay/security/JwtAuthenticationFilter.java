@@ -42,25 +42,30 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        // Extract email from JWT
-        String email = jwtUtil.extractEmail(token);
+        try {
+            // Extract email from JWT
+            String email = jwtUtil.extractEmail(token);
 
-        // Proceed only if email exists and user is not already authenticated
-        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+            // Proceed only if email exists and user is not already authenticated
+            if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
-            if (jwtUtil.isTokenValid(token, email)) {
+                if (jwtUtil.isTokenValid(token, email)) {
 
-                // Create authentication object with user details and authorities
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                    // Create authentication object with user details and authorities
+                    UsernamePasswordAuthenticationToken authToken =
+                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
-                // Add request details to the authentication object
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    // Add request details to the authentication object
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                // Store authentication in the SecurityContext
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+                    // Store authentication in the SecurityContext
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
             }
+        } catch (Exception e) {
+            // Invalid or stale token - simply treat request as unauthenticated instead of crashing
+            SecurityContextHolder.clearContext();
         }
 
         filterChain.doFilter(request, response);
